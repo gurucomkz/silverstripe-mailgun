@@ -40,6 +40,7 @@ use Symbiote\GridFieldExtensions\GridFieldTitleHeader;
 use SilverStripe\Forms\GridField\GridFieldToolbarHeader;
 use SilverStripe\Forms\GridField\GridFieldSortableHeader;
 use Mailgun\Model\Domain\IndexResponse as DomainIndexResponse;
+use Mailgun\Model\Domain\ShowResponse;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse;
 
@@ -142,7 +143,7 @@ class MailgunAdmin extends LeftAndMain implements PermissionProvider
 
     /**
      * Returns a GridField of messages
-     * @return Form
+     * @return Form|null
      */
     public function getEditForm($id = null, $fields = null)
     {
@@ -204,7 +205,7 @@ class MailgunAdmin extends LeftAndMain implements PermissionProvider
             $this->SearchFields(),
             $messagesList,
             // necessary for tree node selection in LeftAndMain.EditForm.js
-            new HiddenField('ID', false, 0)
+            new HiddenField('ID', null, 0)
         );
 
         $fields = new FieldList([
@@ -236,7 +237,9 @@ class MailgunAdmin extends LeftAndMain implements PermissionProvider
         // Manage tabs state
         $actionParam = $this->getRequest()->param('Action');
         if ($actionParam == 'setting') {
-            $settingsTab->addExtraClass('ui-state-active');
+            if ($settingsTab) {
+                $settingsTab->addExtraClass('ui-state-active');
+            }
         } elseif ($actionParam == 'messages') {
             $messagesTab->addExtraClass('ui-state-active');
         }
@@ -659,7 +662,7 @@ class MailgunAdmin extends LeftAndMain implements PermissionProvider
     public function WebhookInstalled()
     {
         /** @var WebhookIndexResponse $response */
-        $response = $this->getCachedData('webhooks.index', null, 60 * self::WEBHOOK_CACHE_MINUTES);
+        $response = $this->getCachedData('webhooks.index', [], 60 * self::WEBHOOK_CACHE_MINUTES);
         if (!$response) {
             return false;
         }
@@ -691,7 +694,7 @@ class MailgunAdmin extends LeftAndMain implements PermissionProvider
 
     /**
      * Hook details for template
-     * @return ArrayData
+     * @return ArrayData|null
      */
     public function WebhookDetails()
     {
@@ -699,6 +702,7 @@ class MailgunAdmin extends LeftAndMain implements PermissionProvider
         if ($el) {
             return new ArrayData($el);
         }
+        return null;
     }
 
     /**
@@ -845,7 +849,7 @@ class MailgunAdmin extends LeftAndMain implements PermissionProvider
         $client = MailgunHelper::getClient();
 
         /** @var DomainIndexResponse $response */
-        $response = $this->getCachedData('domains.index', null, 60 * self::SENDINGDOMAIN_CACHE_MINUTES);
+        $response = $this->getCachedData('domains.index', [], 60 * self::SENDINGDOMAIN_CACHE_MINUTES);
 
         $domains = $response->getDomains();
         $defaultDomain = $this->getDomain();
@@ -869,7 +873,7 @@ class MailgunAdmin extends LeftAndMain implements PermissionProvider
         $defaultDomainInfos = null;
 
         /** @var DomainIndexResponse $response */
-        $response = $this->getCachedData('domains.index', null, 60 * self::SENDINGDOMAIN_CACHE_MINUTES);
+        $response = $this->getCachedData('domains.index', [], 60 * self::SENDINGDOMAIN_CACHE_MINUTES);
         $domains = [];
         if ($response) {
             $domains = $response->getDomains();
@@ -893,6 +897,7 @@ class MailgunAdmin extends LeftAndMain implements PermissionProvider
         if ($domains) {
             foreach ($domains as $domain) {
                 $time = 60 * self::SENDINGDOMAIN_CACHE_MINUTES;
+                /** @var ShowResponse */
                 $showResponse = $this->getCachedData('domains.show', [$domain->getName()], $time);
 
                 /*

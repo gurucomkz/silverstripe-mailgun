@@ -225,7 +225,7 @@ class MailgunHelper
      * Resolve default send to address
      *
      * @param string $to
-     * @return string
+     * @return string|boolean
      */
     public static function resolveDefaultToEmail($to = null)
     {
