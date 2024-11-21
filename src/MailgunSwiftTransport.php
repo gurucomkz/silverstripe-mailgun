@@ -115,7 +115,7 @@ class MailgunSwiftTransport implements Swift_Transport
         $sendCount = 0;
         $disableSending =
             $message->getHeaders()->has('X-SendingDisabled') ||
-            MailgunHelper::config()->disable_sending;
+            MailgunHelper::config()->get('disable_sending');
 
         $emailData = $this->buildMessage($message);
 
@@ -141,7 +141,7 @@ class MailgunSwiftTransport implements Swift_Transport
         }
         $this->resultApi = $result;
 
-        if (MailgunHelper::config()->enable_logging) {
+        if (MailgunHelper::config()->get('enable_logging')) {
             $this->logMessageContent($message, $result);
         }
 
@@ -369,7 +369,7 @@ class MailgunSwiftTransport implements Swift_Transport
             $metadataHeader = $message->getHeaders()->get('X-MC-Metadata');
             $metadata = json_decode(
                 $metadataHeader->getValue(),
-                JSON_OBJECT_AS_ARRAY
+                true
             );
             $message->getHeaders()->remove('X-MC-Metadata');
         }
@@ -384,7 +384,7 @@ class MailgunSwiftTransport implements Swift_Transport
             $mergeVarsHeader = $message->getHeaders()->get('X-MC-MergeVars');
             $mergeVarsFromMC = json_decode(
                 $mergeVarsHeader->getValue(),
-                JSON_OBJECT_AS_ARRAY
+                true
             );
             // We need to transform them to a mandrill friendly format rcpt => vars, to email : {...}
             foreach ($mergeVarsFromMC as $row) {
@@ -408,7 +408,7 @@ class MailgunSwiftTransport implements Swift_Transport
                 ->get('X-Mailgun-Variables');
             $metadata = json_decode(
                 $metadataHeader->getValue(),
-                JSON_OBJECT_AS_ARRAY
+                true
             );
             $message->getHeaders()->remove('X-Mailgun-Variables');
         }
@@ -418,7 +418,7 @@ class MailgunSwiftTransport implements Swift_Transport
                 ->get('X-Mailgun-Recipient-Variables');
             $mergeVars = json_decode(
                 $recipientVariablesHeader->getValue(),
-                JSON_OBJECT_AS_ARRAY
+                true
             );
             $message->getHeaders()->remove('X-Mailgun-Recipient-Variables');
         }
@@ -493,12 +493,12 @@ class MailgunSwiftTransport implements Swift_Transport
         }
 
         // If we ask to provide plain, use our custom method instead of the provided one
-        if ($bodyHtml && MailgunHelper::config()->provide_plain) {
+        if ($bodyHtml && MailgunHelper::config()->get('provide_plain')) {
             $bodyText = EmailUtils::convert_html_to_text($bodyHtml);
         }
 
         // Should we inline css
-        if (!$inlineCss && MailgunHelper::config()->inline_styles && $bodyHtml) {
+        if (!$inlineCss && MailgunHelper::config()->get('inline_styles') && $bodyHtml) {
             $bodyHtml = EmailUtils::inline_styles($bodyHtml);
         }
 
@@ -511,7 +511,7 @@ class MailgunSwiftTransport implements Swift_Transport
         }
 
         // Mailgun params format does not work well in yml, so we map them
-        $rawParams = MailgunHelper::config()->default_params;
+        $rawParams = MailgunHelper::config()->get('default_params');
         $defaultParams = [];
         foreach ($rawParams as $rawParamKey => $rawParamValue) {
             switch ($rawParamKey) {

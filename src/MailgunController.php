@@ -9,7 +9,6 @@ use SilverStripe\Core\Environment;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Security\Permission;
-use SilverStripe\Core\Injector\Injector;
 
 /**
  * Provide extensions points for handling the webhook
@@ -45,7 +44,7 @@ class MailgunController extends Controller
     ];
 
     /**
-     * @var Psr\Log\LoggerInterface
+     * @var LoggerInterface
      */
     public $logger;
 
@@ -150,14 +149,14 @@ class MailgunController extends Controller
             }
         }
 
-        $payload = json_decode($json, JSON_OBJECT_AS_ARRAY);
+        $payload = json_decode($json, true);
 
         try {
             $this->processPayload($payload, $batchId);
         } catch (Exception $ex) {
             // Maybe processing payload will create exceptions, but we
             // catch them to send a proper response to the API
-            $logLevel = self::config()->log_level ? self::config()->log_level : 7;
+            $logLevel = self::config()->get('log_level') ?: 7;
             $this->getLogger()->log($ex->getMessage(), $logLevel);
         }
 
@@ -230,7 +229,7 @@ class MailgunController extends Controller
     /**
      * Get logger
      *
-     * @return Psr\SimpleCache\CacheInterface
+     * @return LoggerInterface
      */
     public function getLogger()
     {

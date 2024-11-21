@@ -61,20 +61,20 @@ class MailgunHelper
     public static function getClient()
     {
         if (!self::$client) {
-            $key = self::config()->api_key;
+            $key = self::config()->get('api_key');
             if (empty($key)) {
                 throw new \Exception(
                     'api_key is not configured for ' . __CLASS__
                 );
             }
             $endpoint = self::DEFAULT_ENDPOINT;
-            if (self::config()->endpoint) {
-                $endpoint = self::config()->endpoint;
+            if (self::config()->get('endpoint')) {
+                $endpoint = self::config()->get('endpoint');
             }
             $configurator = new HttpClientConfigurator();
             $configurator->setApiKey($key);
             $configurator->setEndpoint($endpoint);
-            if (self::config()->debug) {
+            if (self::config()->get('debug')) {
                 $configurator->setDebug(true);
             }
             self::$client = new Mailgun($configurator);
@@ -89,7 +89,7 @@ class MailgunHelper
      */
     public static function getLogFolder()
     {
-        $logFolder = BASE_PATH . '/' . self::config()->log_folder;
+        $logFolder = BASE_PATH . '/' . self::config()->get('log_folder');
         if (!is_dir($logFolder)) {
             mkdir($logFolder, 0755, true);
         }
@@ -101,7 +101,7 @@ class MailgunHelper
      */
     public static function getDomain()
     {
-        if ($domain = self::config()->domain) {
+        if ($domain = self::config()->get('domain')) {
             return $domain;
         }
         if ($domain = Environment::getEnv('MAILGUN_DOMAIN')) {
@@ -120,40 +120,40 @@ class MailgunHelper
         // Regular api key used for sending emails
         $api_key = Environment::getEnv('MAILGUN_API_KEY');
         if ($api_key) {
-            self::config()->api_key = $api_key;
+            self::config()->set('api_key', $api_key);
         }
 
         $domain = Environment::getEnv('MAILGUN_DOMAIN');
         if ($domain) {
-            self::config()->domain = $domain;
+            self::config()->set('domain', $domain);
         }
 
         // Set a custom endpoint
         $endpoint = Environment::getEnv('MAILGUN_ENDPOINT');
         if ($endpoint) {
-            self::config()->endpoint = $endpoint;
+            self::config()->set('endpoint', $endpoint);
         }
 
         // Debug
         $debug = Environment::getEnv('MAILGUN_DEBUG');
         if ($debug) {
-            self::config()->debug = $debug;
+            self::config()->set('debug', $debug);
         }
 
         // Disable sending
         $sending_disabled = Environment::getEnv('MAILGUN_SENDING_DISABLED');
         if ($sending_disabled) {
-            self::config()->disable_sending = $sending_disabled;
+            self::config()->set('disable_sending', $sending_disabled);
         }
 
         // Log all outgoing emails (useful for testing)
         $enable_logging = Environment::getEnv('MAILGUN_ENABLE_LOGGING');
         if ($enable_logging) {
-            self::config()->enable_logging = $enable_logging;
+            self::config()->set('enable_logging', $enable_logging);
         }
 
         // We have a key, we can register the transport
-        if (self::config()->api_key) {
+        if (self::config()->get('api_key')) {
             self::registerTransport();
         }
     }
@@ -206,12 +206,12 @@ class MailgunHelper
         }
         // Look in siteconfig for default sender
         $config = SiteConfig::current_site_config();
-        $config_field = self::config()->siteconfig_from;
-        if ($config_field && !empty($config->$config_field)) {
+        $config_field = self::config()->get('siteconfig_from');
+        if ($config_field && !empty($config->get($config_field))) {
             return $config->$config_field;
         }
         // Use admin email
-        if ($admin = Email::config()->admin_email) {
+        if ($admin = Email::config()->get('admin_email')) {
             return $admin;
         }
         // If we still don't have anything, create something based on the domain
@@ -241,11 +241,11 @@ class MailgunHelper
             }
         }
         $config = SiteConfig::current_site_config();
-        $config_field = self::config()->siteconfig_to;
-        if ($config_field && !empty($config->$config_field)) {
+        $config_field = self::config()->get('siteconfig_to');
+        if ($config_field && !empty($config->get($config_field))) {
             return $config->$config_field;
         }
-        if ($admin = Email::config()->admin_email) {
+        if ($admin = Email::config()->get('admin_email')) {
             return $admin;
         }
         return false;
